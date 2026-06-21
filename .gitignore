@@ -1,0 +1,7 @@
+.env
+piper-voices/*.onnx
+piper-voices/*.onnx.json
+__pycache__/
+*.pyc
+.DS_Store
+*.log

@@ -1,0 +1,44 @@
+<!--
+  Hermes Voice dialplan
+  Place at: freeswitch/conf/dialplan/default.xml (or merge into your existing default context)
+
+  Dial extension 8500 (change to whatever you like) to reach the bot.
+  This answers the call, then forks live audio to the bot's WebSocket
+  server (mod_audio_fork) so it can run STT -> LLM -> TTS and stream
+  audio back into the same call leg.
+
+  If you are bridging FROM 3CX or FreePBX:
+    - Set up a SIP trunk on that PBX pointing to this FreeSWITCH box's IP.
+    - Route an inbound DID or extension on 3CX/FreePBX to dial out over
+      that trunk to extension 8500 here (e.g. "9-8500" or a direct route
+      depending on your dialplan there).
+    - From FreeSWITCH's perspective it's just an inbound call from a peer,
+      handled identically to a call from any softphone.
+-->
+<include>
+  <context name="default">
+
+    <extension name="hermes-bot">
+      <condition field="destination_number" expression="^8500$">
+
+        <action application="answer"/>
+        <action application="sleep" data="300"/>
+
+        <!--
+          mod_audio_fork streams this call's audio to the bot over a
+          plain WebSocket (ws://) connection, and the bot can send audio
+          frames back the same way to be played into the call.
+          Args: ws_url  metadata_json  mix_type(mono/stereo)
+        -->
+        <action application="set" data="HERMES_CALL_ID=${uuid}"/>
+        <action application="audio_fork"
+                data="ws://127.0.0.1:8765/stream {\"call_id\":\"${HERMES_CALL_ID}\"} mono"/>
+
+        <!-- Keep the call alive while audio_fork handles the conversation -->
+        <action application="park"/>
+
+      </condition>
+    </extension>
+
+  </context>
+</include>

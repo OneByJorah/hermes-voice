@@ -1,0 +1,80 @@
+version: "3.9"
+
+# ============================================================================
+# HERMES VOICE — self-hosted voice assistant call stack
+# JorahOne
+#
+# Call path:
+#   Caller --SIP/RTP--> [PBX of your choice] --SIP/RTP--> FreeSWITCH (media)
+#                                                          --WebSocket audio--> bot
+#                                                            |-- STT: faster-whisper
+#                                                            |-- LLM: Ollama / llama.cpp / hosted API
+#                                                            |-- TTS: Piper
+#                                                          --WebSocket audio--> back into call
+#
+# PBX OPTIONS (see README.md "PBX integration" section for full detail):
+#   - none/standalone : bundled FreeSWITCH below is the only PBX, dial ext. 8500
+#   - 3CX             : keep 3CX, trunk a DID/extension into this FreeSWITCH
+#   - FreePBX         : same pattern as 3CX, trunk into this FreeSWITCH
+#   - Asterisk        : use Asterisk's ARI + externalMedia instead of
+#                        FreeSWITCH's audio_fork (see bot/server_asterisk.py)
+#   In every case the PBX only needs to get a call's media to FreeSWITCH (or
+#   directly to the bot, for the Asterisk path) — the STT/LLM/TTS bot logic
+#   is identical regardless of which PBX answers the call.
+#
+# LLM BACKEND OPTIONS (set LLM_BACKEND in .env):
+#   - ollama   : local Ollama server (default, e.g. your RTX 3060 box)
+#   - llamacpp : local llama.cpp `server` binary (OpenAI-compatible endpoint)
+#   - api      : hosted API — Anthropic by default, or any OpenAI-compatible
+#                endpoint (OpenAI, OpenRouter, etc.) via API_PROVIDER
+# ============================================================================
+
+services:
+
+  freeswitch:
+    image: signalwire/freeswitch:latest
+    container_name: hermes-freeswitch
+    network_mode: host          # simplest for SIP/RTP NAT behavior on a LAN
+    volumes:
+      - ./freeswitch/conf:/etc/freeswitch
+    environment:
+      - TZ=America/New_York     # adjust
+    restart: unless-stopped
+    profiles: ["freeswitch"]    # `docker compose --profile freeswitch up`
+                                  # omit this profile entirely if bridging
+                                  # to your own 3CX/FreePBX/Asterisk instead
+
+  bot:
+    build: ./bot
+    container_name: hermes-bot
+    network_mode: host
+    volumes:
+      - ./bot:/app
+      - ./piper-voices:/piper-voices
+    env_file:
+      - .env
+    environment:
+      - WHISPER_MODEL=${WHISPER_MODEL:-small.en}
+      - WHISPER_DEVICE=${WHISPER_DEVICE:-cuda}
+      - PIPER_VOICE=${PIPER_VOICE:-/piper-voices/en_US-amy-medium.onnx}
+      - BOT_WS_PORT=${BOT_WS_PORT:-8765}
+      - HERMES_SYSTEM_PROMPT_FILE=/app/persona.txt
+    restart: unless-stopped
+
+# NOTE: Ollama is assumed to already be running on your host (RTX 3060 box)
+# per your existing setup. If you'd rather containerize it here too, add:
+#
+#  ollama:
+#    image: ollama/ollama:latest
+#    container_name: hermes-ollama
+#    runtime: nvidia
+#    environment:
+#      - NVIDIA_VISIBLE_DEVICES=all
+#    volumes:
+#      - ollama-data:/root/.ollama
+#    ports:
+#      - "11434:11434"
+#    restart: unless-stopped
+#
+# volumes:
+#   ollama-data:
