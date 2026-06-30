@@ -1,0 +1,3 @@
+[hermes-voice deploy attempt]
+- docker compose config validates.
+- docker compose build blocked because Docker daemon is not running on this host.

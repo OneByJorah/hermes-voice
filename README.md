@@ -1,4 +1,5 @@
 # Hermes Voice — Self-Hosted Phone AI Assistant
+docker info >/dev/null 2>&1 || echo "Docker daemon is not running"
 
 **Version:** v1.0  
 **Status:** Active Development  
