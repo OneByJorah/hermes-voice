@@ -14,9 +14,8 @@ import asyncio
 import json
 import os
 
-import websockets
-
 import hermes_brain as brain
+import websockets
 from vad import create_vad
 
 BOT_WS_PORT = int(os.environ.get("BOT_WS_PORT", "8765"))

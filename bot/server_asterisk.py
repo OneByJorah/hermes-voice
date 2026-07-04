@@ -52,10 +52,9 @@ import json
 import os
 import socket
 
+import hermes_brain as brain
 import requests
 import websockets
-
-import hermes_brain as brain
 from vad import create_vad
 
 ARI_HOST = os.environ.get("ARI_HOST", "http://127.0.0.1:8088")

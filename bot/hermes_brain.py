@@ -9,13 +9,13 @@ in and out; this module only knows about PCM16 bytes and text.
 
 import io
 import os
+import wave
 
 import numpy as np
 import requests
 import soundfile as sf
 from faster_whisper import WhisperModel
 from piper import PiperVoice
-import wave
 
 LLM_BACKEND = os.environ.get("LLM_BACKEND", "ollama")  # ollama | llamacpp | api
 
@@ -143,7 +143,7 @@ def synthesize_piper(text: str, dst_sample_rate: int) -> bytes:
     voice.synthesize(text, audio_bytes)
     audio_bytes.seek(0)
 
-    data, sr = sf.read(audio_bytes, dtype='float32')
+    data, sr = sf.read(audio_bytes, dtype="float32")
     if sr != dst_sample_rate:
         data = np.interp(
             np.linspace(0, len(data), int(len(data) * dst_sample_rate / sr), endpoint=False),
