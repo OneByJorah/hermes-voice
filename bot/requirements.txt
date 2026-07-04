@@ -1,6 +1,13 @@
-websockets==12.0
-faster-whisper==1.0.3
-numpy==1.26.4
-requests==2.32.3
-piper-tts==1.2.0
-soundfile==0.12.1
+websockets>=12.0
+faster-whisper>=1.0.3
+numpy>=1.26.4
+requests>=2.32.3
+piper-tts>=1.2.0
+soundfile>=0.12.1
+silero-vad>=5.1
+
+# Optional: PyTorch for Silero VAD (required for silero-vad)
+# Install separately per your CUDA setup:
+#   pip install torch torchaudio
+# Or for CPU-only:
+#   pip install torch torchaudio --index-url https://download.pytorch.org/whl/cpu

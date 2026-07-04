@@ -9,12 +9,13 @@ in and out; this module only knows about PCM16 bytes and text.
 
 import io
 import os
-import subprocess
-import wave
 
 import numpy as np
 import requests
+import soundfile as sf
 from faster_whisper import WhisperModel
+from piper import PiperVoice
+import wave
 
 LLM_BACKEND = os.environ.get("LLM_BACKEND", "ollama")  # ollama | llamacpp | api
 
@@ -136,10 +137,20 @@ def resample_pcm16(pcm_bytes: bytes, src_rate: int, dst_rate: int) -> bytes:
 
 
 def synthesize_piper(text: str, dst_sample_rate: int) -> bytes:
-    """Runs Piper TTS as a subprocess, returns raw PCM16 @ dst_sample_rate bytes."""
-    cmd = ["piper", "--model", PIPER_VOICE, "--output-raw"]
-    proc = subprocess.run(cmd, input=text.encode("utf-8"), capture_output=True, check=True)
-    return resample_pcm16(proc.stdout, 22050, dst_sample_rate)
+    """Runs Piper TTS via Python module, returns raw PCM16 @ dst_sample_rate bytes."""
+    voice = PiperVoice.load(PIPER_VOICE)
+    audio_bytes = io.BytesIO()
+    voice.synthesize(text, audio_bytes)
+    audio_bytes.seek(0)
+
+    data, sr = sf.read(audio_bytes, dtype='float32')
+    if sr != dst_sample_rate:
+        data = np.interp(
+            np.linspace(0, len(data), int(len(data) * dst_sample_rate / sr), endpoint=False),
+            np.arange(len(data)),
+            data,
+        )
+    return (data * 32767).astype(np.int16).tobytes()
 
 
 def new_history() -> list[dict]:

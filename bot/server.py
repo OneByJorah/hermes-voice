@@ -14,15 +14,13 @@ import asyncio
 import json
 import os
 
-import numpy as np
 import websockets
 
 import hermes_brain as brain
+from vad import create_vad
 
 BOT_WS_PORT = int(os.environ.get("BOT_WS_PORT", "8765"))
 SAMPLE_RATE = int(os.environ.get("SAMPLE_RATE", "8000"))  # 8000=G.711, 16000=wideband
-SILENCE_MS = 700
-SILENCE_THRESHOLD = 500
 
 
 class CallSession:
@@ -30,11 +28,12 @@ class CallSession:
         self.call_id = call_id
         self.history = brain.new_history()
         self.buffer = bytearray()
-        self.silence_ms = 0
+        self.vad = create_vad(SAMPLE_RATE)
+        self.speech_started = False
 
     def reset_buffer(self):
         self.buffer = bytearray()
-        self.silence_ms = 0
+        self.vad.reset()
 
 
 async def handle_connection(websocket):
@@ -59,32 +58,34 @@ async def handle_connection(websocket):
 
             session.buffer.extend(message)
 
-            chunk = np.frombuffer(message, dtype=np.int16)
-            is_silent = np.abs(chunk).mean() < SILENCE_THRESHOLD if len(chunk) else True
-            frame_ms = (len(message) / 2) / SAMPLE_RATE * 1000
+            # Process through VAD
+            for event in session.vad.process_stream(message):
+                if event == "speech_start":
+                    session.speech_started = True
+                    session.buffer = bytearray()
+                    print(f"[hermes] [{call_id}] speech started")
 
-            session.silence_ms = session.silence_ms + frame_ms if is_silent else 0
+                elif event == "speech_end" and session.speech_started:
+                    session.speech_started = False
+                    pcm = bytes(session.buffer)
+                    session.reset_buffer()
 
-            if session.silence_ms >= SILENCE_MS and len(session.buffer) > SAMPLE_RATE:
-                pcm = bytes(session.buffer)
-                session.reset_buffer()
+                    text = brain.transcribe(pcm, SAMPLE_RATE)
+                    if not text:
+                        continue
 
-                text = brain.transcribe(pcm, SAMPLE_RATE)
-                if not text:
-                    continue
+                    print(f"[hermes] [{call_id}] caller said: {text}")
+                    session.history.append({"role": "user", "content": text})
 
-                print(f"[hermes] [{call_id}] caller said: {text}")
-                session.history.append({"role": "user", "content": text})
+                    reply = brain.ask_llm(session.history)
+                    session.history.append({"role": "assistant", "content": reply})
+                    print(f"[hermes] [{call_id}] hermes says: {reply}")
 
-                reply = brain.ask_llm(session.history)
-                session.history.append({"role": "assistant", "content": reply})
-                print(f"[hermes] [{call_id}] hermes says: {reply}")
+                    audio_out = brain.synthesize_piper(reply, SAMPLE_RATE)
 
-                audio_out = brain.synthesize_piper(reply, SAMPLE_RATE)
-
-                frame_size = 320  # 20ms @ 8kHz mono PCM16
-                for i in range(0, len(audio_out), frame_size):
-                    await websocket.send(audio_out[i:i + frame_size])
+                    frame_size = 320  # 20ms @ 8kHz mono PCM16
+                    for i in range(0, len(audio_out), frame_size):
+                        await websocket.send(audio_out[i:i + frame_size])
 
     except websockets.exceptions.ConnectionClosed:
         print(f"[hermes] call_id={call_id} disconnected")

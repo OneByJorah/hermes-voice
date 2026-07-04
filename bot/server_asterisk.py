@@ -52,11 +52,11 @@ import json
 import os
 import socket
 
-import numpy as np
 import requests
 import websockets
 
 import hermes_brain as brain
+from vad import create_vad
 
 ARI_HOST = os.environ.get("ARI_HOST", "http://127.0.0.1:8088")
 ARI_USER = os.environ.get("ARI_USER", "hermes")
@@ -66,8 +66,6 @@ ARI_APP = os.environ.get("ARI_APP", "hermes-voice")
 EXTERNAL_MEDIA_HOST = os.environ.get("EXTERNAL_MEDIA_HOST", "127.0.0.1")
 EXTERNAL_MEDIA_PORT = int(os.environ.get("EXTERNAL_MEDIA_PORT", "40000"))
 SAMPLE_RATE = int(os.environ.get("SAMPLE_RATE", "16000"))  # slin16 default
-SILENCE_MS = 700
-SILENCE_THRESHOLD = 500
 
 
 def ari_post(path: str, **params):
@@ -97,7 +95,8 @@ async def handle_channel(channel_id: str):
 
     history = brain.new_history()
     buffer = bytearray()
-    silence_ms = 0
+    vad = create_vad(SAMPLE_RATE)
+    speech_started = False
 
     sock = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     sock.bind((EXTERNAL_MEDIA_HOST, EXTERNAL_MEDIA_PORT))
@@ -118,32 +117,36 @@ async def handle_channel(channel_id: str):
                 continue
 
             buffer.extend(pcm)
-            chunk = np.frombuffer(pcm, dtype=np.int16)
-            is_silent = np.abs(chunk).mean() < SILENCE_THRESHOLD if len(chunk) else True
-            frame_ms = (len(pcm) / 2) / SAMPLE_RATE * 1000
-            silence_ms = silence_ms + frame_ms if is_silent else 0
 
-            if silence_ms >= SILENCE_MS and len(buffer) > SAMPLE_RATE:
-                pcm_full = bytes(buffer)
-                buffer = bytearray()
-                silence_ms = 0
+            # Process through VAD
+            for event in vad.process_stream(pcm):
+                if event == "speech_start":
+                    speech_started = True
+                    buffer = bytearray()
+                    print(f"[hermes-asterisk] speech started")
 
-                text = brain.transcribe(pcm_full, SAMPLE_RATE)
-                if not text:
-                    continue
+                elif event == "speech_end" and speech_started:
+                    speech_started = False
+                    pcm_full = bytes(buffer)
+                    buffer = bytearray()
+                    vad.reset()
 
-                print(f"[hermes-asterisk] caller said: {text}")
-                history.append({"role": "user", "content": text})
-                reply = brain.ask_llm(history)
-                history.append({"role": "assistant", "content": reply})
-                print(f"[hermes-asterisk] hermes says: {reply}")
+                    text = brain.transcribe(pcm_full, SAMPLE_RATE)
+                    if not text:
+                        continue
 
-                audio_out = brain.synthesize_piper(reply, SAMPLE_RATE)
-                # Send back as RTP-framed UDP packets (simplified — a real
-                # implementation should track RTP seq/timestamp properly)
-                frame_size = 640  # 20ms @ 16kHz mono PCM16
-                for i in range(0, len(audio_out), frame_size):
-                    sock.sendto(audio_out[i:i + frame_size], (EXTERNAL_MEDIA_HOST, EXTERNAL_MEDIA_PORT))
+                    print(f"[hermes-asterisk] caller said: {text}")
+                    history.append({"role": "user", "content": text})
+                    reply = brain.ask_llm(history)
+                    history.append({"role": "assistant", "content": reply})
+                    print(f"[hermes-asterisk] hermes says: {reply}")
+
+                    audio_out = brain.synthesize_piper(reply, SAMPLE_RATE)
+                    # Send back as RTP-framed UDP packets (simplified — a real
+                    # implementation should track RTP seq/timestamp properly)
+                    frame_size = 640  # 20ms @ 16kHz mono PCM16
+                    for i in range(0, len(audio_out), frame_size):
+                        sock.sendto(audio_out[i:i + frame_size], (EXTERNAL_MEDIA_HOST, EXTERNAL_MEDIA_PORT))
 
     finally:
         sock.close()
