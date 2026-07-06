@@ -1,0 +1,7 @@
+repo: hermes-voice
+class: AI / Voice
+org: OneByJorah
+license: MIT
+production_score: 72
+last_audit: "2026-07-05"
+deploy_target: scratch
