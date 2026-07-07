@@ -24,6 +24,10 @@
 
 ---
 
+## 📸 Screenshot
+
+This is a CLI/backend-only tool. No screenshots available.
+
 ## ✨ Features
 
 - **📞 Phone Integration** — Works with FreeSWITCH, Asterisk/FreePBX, and 3CX
