@@ -42,7 +42,7 @@ jobs:
         with:
           context: ./bot
           push: false
-          tags: hermes-voice:ci
+          tags: voicecortex:ci
           cache-from: type=gha
           cache-to: type=gha,mode=max
 
