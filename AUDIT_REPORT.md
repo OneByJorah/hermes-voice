@@ -1,4 +1,4 @@
-# AUDIT_REPORT - hermes-voice
+# AUDIT_REPORT - VoiceCortex
 **Date:** 2026-07-05
 **Score:** 72/100 - DEGRADED
 - Extensive Python phone AI assistant - no critical bugs

@@ -1,4 +1,4 @@
-# hermes-voice — Fixes and Enhancements
+# VoiceCortex — Fixes and Enhancements
 
 ## Changes Made
 
