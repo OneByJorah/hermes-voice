@@ -30,7 +30,7 @@ Setup overview (see README.md for full walkthrough):
    extension into a Stasis app:
      exten => 8500,1,NoOp(Hermes Voice)
       same => n,Answer()
-      same => n,Stasis(hermes-voice)
+      same => n,Stasis(voicecortex)
       same => n,Hangup()
 
 4. This script connects to ARI's WebSocket event stream for the
@@ -60,7 +60,7 @@ from vad import create_vad
 ARI_HOST = os.environ.get("ARI_HOST", "http://127.0.0.1:8088")
 ARI_USER = os.environ.get("ARI_USER", "hermes")
 ARI_PASS = os.environ.get("ARI_PASS", "changeme")
-ARI_APP = os.environ.get("ARI_APP", "hermes-voice")
+ARI_APP = os.environ.get("ARI_APP", "voicecortex")
 
 EXTERNAL_MEDIA_HOST = os.environ.get("EXTERNAL_MEDIA_HOST", "127.0.0.1")
 EXTERNAL_MEDIA_PORT = int(os.environ.get("EXTERNAL_MEDIA_PORT", "40000"))

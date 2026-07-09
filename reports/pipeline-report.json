@@ -1,0 +1,18 @@
+{
+  "repo": "hermes-voice",
+  "production_score": 72,
+  "architecture_score": 57,
+  "security_score": 47,
+  "documentation_score": 80,
+  "testing_score": 0,
+  "automation_score": 80,
+  "performance_score": 0,
+  "deployment_score": 75,
+  "github_quality_score": 85,
+  "branding_score": 90,
+  "status": "DEGRADED",
+  "last_audit": "2026-07-05",
+  "benchmark_summary": {},
+  "community_status": "NO_SIGNAL_YET",
+  "adoption_status": "NO_SIGNAL_YET"
+}

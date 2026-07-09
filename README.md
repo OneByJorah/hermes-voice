@@ -85,8 +85,8 @@ Caller  ──SIP/RTP──▶│  PBX Layer (pick one)                         
 ### 1. Clone & configure
 
 ```bash
-git clone https://github.com/OneByJorah/hermes-voice.git
-cd hermes-voice
+git clone https://github.com/OneByJorah/VoiceCortex.git
+cd VoiceCortex
 cp .env.example .env
 # Edit .env for your LLM backend and paths
 ```
@@ -169,7 +169,7 @@ Dial `8500` from any SIP phone. The bundled FreeSWITCH handles the call and stre
 ### FreePBX / Asterisk — ARI transport
 
 1. Enable ARI in `ari.conf` and HTTP in `http.conf`
-2. Add a dialplan extension that runs `Stasis(hermes-voice)`
+2. Add a dialplan extension that runs `Stasis(voicecortex)`
 3. Set `ARI_HOST`, `ARI_USER`, `ARI_PASS`, `ARI_APP` in `.env`
 4. Run `python bot/server_asterisk.py` instead of the FreeSWITCH server
 
@@ -177,7 +177,7 @@ Dial `8500` from any SIP phone. The bundled FreeSWITCH handles the call and stre
 # Example extensions.conf entry
 exten => 8500,1,NoOp(Hermes Voice)
  same => n,Answer()
- same => n,Stasis(hermes-voice)
+ same => n,Stasis(voicecortex)
  same => n,Hangup()
 ```
 
@@ -253,7 +253,7 @@ docker compose logs -f
 ## 📁 Project Structure
 
 ```
-hermes-voice/
+VoiceCortex/
 ├── bot/
 │   ├── hermes_brain.py           # STT → LLM → TTS core (shared)
 │   ├── server.py                 # FreeSWITCH WebSocket transport
