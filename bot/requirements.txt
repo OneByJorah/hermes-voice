@@ -4,7 +4,7 @@ numpy>=1.26.4
 requests>=2.32.3
 piper-tts>=1.2.0
 soundfile>=0.12.1
-silero-vad>=5.1
+silero-vad>=6.2.1
 
 # Optional: PyTorch for Silero VAD (required for silero-vad)
 # Install separately per your CUDA setup:
