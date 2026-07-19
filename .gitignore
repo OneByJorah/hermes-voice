@@ -1,4 +1,6 @@
 .env
+.venv/
+venv/
 piper-voices/*.onnx
 piper-voices/*.onnx.json
 __pycache__/
