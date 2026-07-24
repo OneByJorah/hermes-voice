@@ -1,30 +1,24 @@
 <div align="center">
-  <img src="https://img.shields.io/badge/Python-3.10+-3776AB?style=for-the-badge&logo=python&logoColor=white">
-  <img src="https://img.shields.io/badge/WebSocket-4CAF50?style=for-the-badge&logo=socket.io&logoColor=white">
-  <img src="https://img.shields.io/badge/license-MIT-blue?style=for-the-badge">
-  <img src="https://img.shields.io/badge/Docker-2496ED?style=for-the-badge&logo=docker&logoColor=white">
-</div>
 
-<br>
+![VoiceCortex banner](docs/assets/banner.svg)
 
-<div align="center">
-  <h1>VoiceCortex</h1>
-  <p><strong>Self-Hosted Phone AI Assistant</strong></p>
-  <p>Real-time voice conversations over telephone via STT > LLM > TTS pipeline.</p>
-  <p>
-    <a href="#features">Features</a> •
-    <a href="#quick-start">Quick Start</a> •
-    <a href="#architecture">Architecture</a> •
-    <a href="#contributing">Contributing</a>
-  </p>
+# VoiceCortex
+
+Self-hosted phone AI assistant
+
+![License](https://img.shields.io/badge/license-MIT-brightgreen)
+![Language](https://img.shields.io/badge/language-Python-blue)
 </div>
 
 ---
 
-## Screenshot
+<p align="center">
+  <img src="docs/assets/screenshot.png" alt="VoiceCortex preview" width="90%">
+</p>
 
-![VoiceCortex Dashboard](docs/screenshot.png)
-*Phone AI assistant with real-time voice conversations.*
+<br>
+
+---
 
 ## Features
 
@@ -113,7 +107,18 @@ MIT © Jhonattan L. Jimenez
 
 ---
 
-<div align="center">
-  <p>Self-hosted phone AI assistant.</p>
-  <p><a href="https://github.com/OneByJorah">@OneByJorah</a></p>
-</div>
+## 🤝 Contributing
+
+See [CONTRIBUTING.md](CONTRIBUTING.md). All contributions follow the [Code of Conduct](CODE_OF_CONDUCT.md).
+
+## 🔒 Security
+
+Found a vulnerability? Please follow our [Security Policy](SECURITY.md) and report privately to `security@jorahone.com`.
+
+## 📄 License
+
+[MIT License](LICENSE) © Jhonattan L. Jimenez (OneByJorah)
+
+---
+
+<p align="center">Built with 🌴 by <a href="https://github.com/OneByJorah">OneByJorah</a> · <a href="https://jorahone.com">jorahone.com</a></p>
